@@ -66,6 +66,7 @@ src/
 ## Endpoints Disponibles
 
 ```http
+Token Authorization: Bearer <Token>
 
 POST /auth/register - Registro de usuario
 Body: { "email": "user@example.com", "password": "123456", "roleId?": 1 }
@@ -82,7 +83,16 @@ GET /products/:id - Obtener un producto por ID
 
 PUT /products/:id - Actualizar un producto
 
+PATCH /products/:id/stock - Actualizar stock (real-time websockets)
+Body: { "change": number }  # Positivo para incrementar, negativo para decrementar
+
 DELETE /products/:id - Eliminar un producto
+
+GET /products/history/all     - Obtener historial de cambios
+
+GET /products/:id/history       - Obtener historial de cambios de un producto especifico
+
+POST /products/revert/{historyId} - Revertir a una versión anterior
 
 ```
 

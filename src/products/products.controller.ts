@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Patch,
+  Req,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -17,17 +18,26 @@ import { ProductEntity } from './entities/product.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Nuevo guard
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { RequestWithUser } from 'src/product-history/request-with-user.interface';
+import { ProductHistoryService } from 'src/product-history/product-history.service';
+import { DeleteProductResponse } from './dto/delete-response.type';
 
 @Controller('products')
 @UseGuards(JwtAuthGuard) // Protege todas las rutas del controlador
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly historyService: ProductHistoryService,
+  ) {}
 
   @Post()
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  create(@Body() data: CreateProductDto): Promise<ProductEntity> {
-    return this.productsService.create(data);
+  @Roles('admin') // Solo admins pueden crear productos
+  @UseGuards(JwtAuthGuard, RolesGuard) // Asegura autenticación + roles
+  async create(
+    @Body() data: CreateProductDto,
+    @Req() req: RequestWithUser, // Obtiene el usuario autenticado
+  ): Promise<ProductEntity> {
+    return this.productsService.create(data, req.user.id); // Pasa el userId al servicio
   }
 
   @Get()
@@ -47,18 +57,23 @@ export class ProductsController {
   @Put(':id')
   @Roles('admin')
   @UseGuards(RolesGuard)
-  update(
+  async update(
     @Param('id') id: string,
     @Body() data: UpdateProductDto,
-  ): Promise<ProductEntity> {
-    return this.productsService.update(+id, data);
+    @Req() req: RequestWithUser,
+  ) {
+    return this.productsService.update(+id, data, req.user.id);
   }
 
   @Delete(':id')
   @Roles('admin')
   @UseGuards(RolesGuard)
-  remove(@Param('id') id: string): Promise<ProductEntity> {
-    return this.productsService.remove(+id);
+  async remove(
+    @Param('id') id: string,
+    @Req() req: RequestWithUser,
+  ): Promise<DeleteProductResponse> {
+    // Usamos un tipo de respuesta específico
+    return this.productsService.remove(+id, req.user.id);
   }
 
   @Patch(':id/stock')
@@ -69,5 +84,30 @@ export class ProductsController {
     @Body() { change }: { change: number }, // Ej: { "change": -1 } para decrementar
   ) {
     return this.productsService.updateStock(Number(id), change);
+  }
+
+  @Get(':id/history')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getHistory(@Param('id') id: string) {
+    return this.historyService.getHistory(+id);
+  }
+
+  @Get('history/all')
+  @Roles('admin') // Solo accesible por admins
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getFullHistory() {
+    return this.historyService.getFullHistory();
+  }
+
+  @Post('revert/:historyId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async revertVersion(
+    @Param('historyId') historyId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Req() req: RequestWithUser,
+  ) {
+    return this.historyService.revertToVersion(+historyId);
   }
 }
