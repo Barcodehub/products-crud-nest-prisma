@@ -3,10 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ProductEntity } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { WebSocketsGateway } from 'src/websockets/websockets.gateway';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private websocketsGateway: WebSocketsGateway,
+  ) {}
 
   async create(data: CreateProductDto): Promise<ProductEntity> {
     return this.prisma.product.create({ data });
@@ -26,5 +30,17 @@ export class ProductsService {
 
   async remove(id: number): Promise<ProductEntity> {
     return this.prisma.product.delete({ where: { id } });
+  }
+
+  //stock via websocket
+  async updateStock(id: number, stockChange: number): Promise<ProductEntity> {
+    const product = await this.prisma.product.update({
+      where: { id },
+      data: { stock: { increment: stockChange } }, // Incrementa/decrementa stock
+    });
+
+    // Emitir actualización en tiempo real
+    this.websocketsGateway.emitStockUpdate(id, product.stock);
+    return product;
   }
 }

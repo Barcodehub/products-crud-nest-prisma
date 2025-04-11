@@ -7,6 +7,7 @@ import {
   Put,
   Delete,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -58,5 +59,15 @@ export class ProductsController {
   @UseGuards(RolesGuard)
   remove(@Param('id') id: string): Promise<ProductEntity> {
     return this.productsService.remove(+id);
+  }
+
+  @Patch(':id/stock')
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async updateStock(
+    @Param('id') id: string,
+    @Body() { change }: { change: number }, // Ej: { "change": -1 } para decrementar
+  ) {
+    return this.productsService.updateStock(Number(id), change);
   }
 }
