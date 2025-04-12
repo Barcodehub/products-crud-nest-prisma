@@ -1,6 +1,6 @@
 # NestJS + Prisma + PostgreSQL CRUD API
 
-Este proyecto es un CRUD de productos construido con NestJS, Prisma como ORM y PostgreSQL como base de datos. Sigue buenas prácticas de estructuración y modularidad.
+Este proyecto es un sistema de ordenes de compra de productos construido con NestJS, Prisma como ORM y PostgreSQL como base de datos. Sigue buenas prácticas de estructuración y modularidad, JWT, historial de cambios para auditorial y resolucion de problemas con posibilidad de reversion a un estado anterior.
 
 ## Requisitos Previos
 
@@ -29,9 +29,10 @@ JWT_SECRET="tu_clave_secreta_jwt"
 
 ## Estructura del Proyecto
 
+
 ```bash
 src/
-├── auth/                       # Nuevo módulo de autenticación
+├── auth/                      
 │   ├── dto/
 │   │   ├── login.dto.ts
 │   │   └── register.dto.ts
@@ -44,9 +45,30 @@ src/
 │   │   └── roles.decorator.ts
 │   ├── interfaces/
 │   │   └── jwt-payload.interface.ts
+│       └── request-with-user.interface.ts
 │   ├── auth.controller.ts
 │   ├── auth.service.ts
 │   └── auth.module.ts
+├── orders/                     # Nuevo módulo de órdenes
+│   ├── dto/
+│   │   ├── create-order.dto.ts
+│   │   └── update-order.dto.ts
+│   ├── entities/
+│   │   └── order.entity.ts
+│   ├── orders.controller.ts
+│   ├── orders.service.ts
+│   └── orders.module.ts
+│   ├── shared/
+│    ├── enums/
+│      └── order-status.enum.ts
+├── product-history/            # Módulo del historial de cambios
+│   ├── dto/
+│   │   └── revert-history.dto.ts
+│   ├── entities/
+│   │   └── product-history.entity.ts
+│   ├── product-history.controller.ts
+│   ├── product-history.service.ts
+│   └── product-history.module.ts
 ├── products/
 │   ├── dto/
 │   │   ├── create-product.dto.ts
@@ -56,6 +78,9 @@ src/
 │   ├── products.controller.ts
 │   ├── products.service.ts
 │   └── products.module.ts
+├── websockets/                 # Módulo para comunicación en tiempo real
+│      └── websockets.gateway.ts    # Actualizaciones real-time <cambios de stock>
+│      └── websockets.module.ts
 ├── prisma/
 │   ├── prisma.service.ts
 │   └── schema.prisma
@@ -93,6 +118,18 @@ GET /products/history/all     - Obtener historial de cambios
 GET /products/:id/history       - Obtener historial de cambios de un producto especifico
 
 POST /products/revert/{historyId} - Revertir a una versión anterior
+
+POST /orders	       - Crear nueva orden
+Body: {"productId": 123, "amount": 99.99 }
+
+GET	/orders	           - Obtener todas las órdenes del usuario
+
+GET	/orders/:id	       - Obtener una orden específica
+
+PATCH	/orders/:id	   - Actualizar una orden
+Body: { "status": "completed", "paymentId": "mp_123456789" }
+
+DELETE	/orders/:id	   - Eliminar una orden
 
 ```
 

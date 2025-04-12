@@ -18,7 +18,7 @@ import { ProductEntity } from './entities/product.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Nuevo guard
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { RequestWithUser } from 'src/product-history/request-with-user.interface';
+import { RequestWithUser } from 'src/auth/interfaces/request-with-user.interface';
 import { ProductHistoryService } from 'src/product-history/product-history.service';
 import { DeleteProductResponse } from './dto/delete-response.type';
 
