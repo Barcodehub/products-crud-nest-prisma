@@ -25,6 +25,9 @@ npx prisma migrate dev --name init
 ```bash
 DATABASE_URL="postgresql://usuario:contraseña@localhost:5432/nest_prisma_db?schema=public"
 JWT_SECRET="tu_clave_secreta_jwt"
+MERCADO_PAGO_API=https://api.mercadopago.com
+MERCADO_PAGO_ACCESS_TOKEN=TU_ACCESS_TOKEN
+MERCADO_PAGO_PUBLIC_KEY=TU_PUBLIC_KEY
 ```
 
 ## Estructura del Proyecto
@@ -32,7 +35,7 @@ JWT_SECRET="tu_clave_secreta_jwt"
 
 ```bash
 src/
-├── auth/                      
+├── auth/                      # Modulo Auth
 │   ├── dto/
 │   │   ├── login.dto.ts
 │   │   └── register.dto.ts
@@ -49,7 +52,14 @@ src/
 │   ├── auth.controller.ts
 │   ├── auth.service.ts
 │   └── auth.module.ts
-├── orders/                     # Nuevo módulo de órdenes
+├── mercado_pago/                     # Nuevo módulo de mercado pago
+│   ├── models/
+│   │   ├── interfaces...
+│   │   └── ...
+│   ├── mercado_pago.controller.ts
+│   ├── mercado_pago.service.ts
+│   ├── mercado_pago.module.ts
+├── orders/                     #  módulo de órdenes
 │   ├── dto/
 │   │   ├── create-order.dto.ts
 │   │   └── update-order.dto.ts
@@ -69,7 +79,7 @@ src/
 │   ├── product-history.controller.ts
 │   ├── product-history.service.ts
 │   └── product-history.module.ts
-├── products/
+├── products/                   # Gestion de productos
 │   ├── dto/
 │   │   ├── create-product.dto.ts
 │   │   └── update-product.dto.ts
@@ -79,11 +89,11 @@ src/
 │   ├── products.service.ts
 │   └── products.module.ts
 ├── websockets/                 # Módulo para comunicación en tiempo real
-│      └── websockets.gateway.ts    # Actualizaciones real-time <cambios de stock>
+│      └── websockets.gateway.ts    
 │      └── websockets.module.ts
 ├── prisma/
 │   ├── prisma.service.ts
-│   └── schema.prisma
+│   └── prisma.module.ts
 └── main.ts
 ```
 
@@ -91,14 +101,18 @@ src/
 ## Endpoints Disponibles
 
 ```http
-Token Authorization: Bearer <Token>
+Token Authorization: Bearer <Token> 
+```
 
+```http
 POST /auth/register - Registro de usuario
 Body: { "email": "user@example.com", "password": "123456", "roleId?": 1 }
 
 POST /auth/login - Inicio de sesión (devuelve JWT)
 Body: { "email": "user@example.com", "password": "123456" }
+```
 
+```http
 POST /products - Crear producto
 Body: {"name": "Teclado Mecánico", "description": "RGB Switch Red", "price": 99.99}
 
@@ -112,13 +126,17 @@ PATCH /products/:id/stock - Actualizar stock (real-time websockets)
 Body: { "change": number }  # Positivo para incrementar, negativo para decrementar
 
 DELETE /products/:id - Eliminar un producto
+```
 
+```http
 GET /products/history/all     - Obtener historial de cambios
 
 GET /products/:id/history       - Obtener historial de cambios de un producto especifico
 
 POST /products/revert/{historyId} - Revertir a una versión anterior
+```
 
+```http
 POST /orders	       - Crear nueva orden
 Body: {"productId": 123, "amount": 99.99 }
 
@@ -130,6 +148,15 @@ PATCH	/orders/:id	   - Actualizar una orden
 Body: { "status": "completed", "paymentId": "mp_123456789" }
 
 DELETE	/orders/:id	   - Eliminar una orden
+
+```
+
+```http
+GET /mercadopago/identification_types - Obtener tipos de identificación válidos
+GET /mercadopago/installments/{first_six_digits}/{amount} - Obtener planes de cuotas
+POST /mercadopago/card_token - Generar token de tarjeta
+POST /mercadopago/payments - Procesar pago
+POST /mercadopago/webhook - Webhook para notificaciones de pago
 
 ```
 

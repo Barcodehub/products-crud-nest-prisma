@@ -108,4 +108,30 @@ export class OrdersService {
     });
     return this.toOrderEntity(order);
   }
+
+  async prepareForPayment(orderId: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { product: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Orden no encontrada');
+    }
+
+    return {
+      transaction_amount: order.amount,
+      external_reference: order.id.toString(),
+      description: `Compra de ${order.product.name}`,
+      items: [
+        {
+          id: order.product.id.toString(),
+          title: order.product.name,
+          description: order.product.description || '',
+          quantity: order.quantity,
+          unit_price: order.amount / order.quantity,
+        },
+      ],
+    };
+  }
 }
